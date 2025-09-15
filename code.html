@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI CV Maker - Enhanced</title>
+<style>
+  /* Basic resets & layout */
+  body, html {
+    margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa; color: #333;
+    min-height: 100vh;
+  }
+  main > section {
+    display: none;
+    padding: 20px;
+    max-width: 960px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  }
+  main > section.active {
+    display: block;
+  }
+  h1, h2 {
+    margin-bottom: 20px;
+    color: #222;
+    font-weight: 700;
+  }
+  label {
+    font-weight: 600;
+    margin-top: 14px;
+    display: block;
+    color: #444;
+  }
+  input, select, button, textarea {
+    font-size: 1rem;
+    padding: 10px 14px;
+    margin: 8px 0 14px 0;
+    border: 1.5px solid #bbb;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #2962ff;
+    box-shadow: 0 0 5px #2962ffaa;
+  }
+  textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+  button {
+    background-color: #2962ff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    width: auto;
+    border-radius: 8px;
+    padding: 12px 22px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition: background-color 0.35s ease;
+  }
+  button:hover {
+    background-color: #0039cb;
+  }
+  button:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+  }
+  .error {
+    color: #d32f2f;
+    font-size: 0.9rem;
+    margin-top: -8px;
+    margin-bottom: 10px;
+  }
+  .toggle-pass {
+    cursor: pointer;
+    color: #2962ff;
+    font-size: 0.9rem;
+    margin-left: 8px;
+    user-select: none;
+    
+    vertical-align: middle;
+  }
+  ul {
+    padding-left: 22px;
+    margin-top: 0;
+  }
+  ul li {
+    margin-bottom: 6px;
+    font-size: 1rem;
+    color: #333;
+  }
+  .section-header {
+    font-weight: 700;
+    margin-bottom: 12px;
+    font-size: 1.3rem;
+    border-bottom: 2px solid #bbb;
+    padding-bottom: 6px;
+    width: 100%;
+  }
+  /* CV Page layout */
+  .cv-container {
+    display: flex;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    min-height: 600px;
+    box-shadow: 0 8px 32px rgba(60,60,70,0.08);
+  }
+  .cv-left, .cv-right {
+    padding: 30px 25px 30px 25px;
+    box-sizing: border-box;
+    color: #212121;
+    transition: background-color 0.4s ease;
+  }
+  .cv-left {
+    width: 40%;
+    background-color: #e3f2fd;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border-right: 2px solid #ddd;
+  }
+  .cv-right {
+    width: 60%;
+  }
+  .cv-left h3, .cv-right h3 {
+    margin: 16px 0 12px 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    border-bottom: 2px solid #bbb;
+    padding-bottom: 8px;
+    width: 100%;
+    color: #1a1a1a;
+  }
+  #photo-preview {
+    width: 100%;
+    height: auto;
+    max-height: 180px;
+    object-fit: contain;
+    border-radius: 10px;
+    border: 1.5px solid #aaa;
+    margin-bottom: 24px;
+    background: white;
+    box-shadow: 0 0 18px #999;
+  }
+  #personal-preview {
+    list-style-type: disc;
+    padding-left: 28px;
+    width: 100%;
+  }
+  .input-list input {
+    margin-bottom: 14px;
+    width: 100%;
+    font-size: 1.1rem;
+  }
+  .flex-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .flex-row > div {
+    flex: 1;
+    min-width: 250px;
+  }
+  .skill-types {
+    display: flex;
+    gap: 12px;
+  }
+  .skill-types input {
+    width: auto;
+    flex-grow: 1;
+  }
+  ul#skill-list {
+    list-style-type: disc;
+    margin-top: 8px;
+    padding-left: 28px;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+  /* Language inputs container */
+  #language-list {
+    margin-bottom: 15px;
+  }
+  .language-input {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .language-input input[type="text"] {
+    flex: 2;
+    font-size: 1rem;
+    padding: 8px 10px;
+  }
+  .language-input select {
+    flex: 1;
+    font-size: 1rem;
+    padding: 8px 10px;
+  }
+  .language-input button.remove-lang {
+    background: transparent;
+    border: none;
+    font-weight: bold;
+    font-size: 1.3rem;
+    color: #d32f2f;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 8px 3px 8px;
+    transition: color 0.25s ease;
+  }
+  .language-input button.remove-lang:hover {
+    color: #a02020;
+  }
+  /* Language Proficiency Bar Chart */
+  #language-chart {
+    margin-top: 20px;
+  }
+  .lang-bar {
+    margin-bottom: 14px;
+  }
+  .bar-label {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    color: #222;
+  }
+  .bar-outer {
+    background: #ddd;
+    border-radius: 10px;
+    width: 100%;
+    height: 22px;
+    overflow: hidden;
+    box-shadow: inset 1px 1px 4px #bbb;
+  }
+  .bar-inner {
+    height: 100%;
+    border-radius: 10px 0 0 10px;
+    transition: width 0.5s ease;
+  }
+  /* Download button */
+  #download-cv {
+    margin-top: 38px;
+    padding: 14px 26px;
+    font-size: 1.17rem;
+    border-radius: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 16px #2962ffaa;
+    user-select: none;
+  }
+  #download-cv:hover {
+    box-shadow: 0 6px 22px #0039cbaa;
+  }
+  /* Responsive */
+  @media (max-width: 900px) {
+    .cv-container {
+      flex-direction: column;
+      min-height: auto;
+    }
+    .cv-left, .cv-right {
+      width: 100%;
+      padding: 20px 18px 25px 18px;
+    }
+    .cv-left {
+      border-right: none;
+      border-bottom: 2px solid #ddd;
+    }
+  }
+  /* Professional color picker styles */
+  #preset-colors, #preset-colors-right {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(32px,1fr));
+    gap: 6px;
+    max-width: 100%;
+    margin-top: 4px;
+  }
+  .color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    box-shadow: 0 0 4px #9996 inset;
+    transition: border-color 0.3s ease;
+  }
+  .color-swatch.selected {
+    border-color: #2962ff;
+    box-shadow: 0 0 8px #2962ff inset;
+  }
+</style>
+</head>
+<body>
+<main>
+<!-- Signup Page -->
+<section id="signup-page" class="active">
+  <h1>Sign Up</h1>
+  <label for="email">Email address</label>
+  <input type="email" id="email" placeholder="Enter your email" />
+  <div id="email-error" class="error"></div>
+  <button id="email-submit" type="button">Next</button>
+</section>
+<!-- Password Page -->
+<section id="password-page">
+  <h1>Create Password</h1>
+  <label for="password">Password (min 6 characters)</label>
+  <input type="password" id="password" placeholder="Enter password" />
+  <span id="toggle-password" class="toggle-pass" tabindex="0">Show</span>
+  <div id="password-error" class="error"></div>
+  <button id="password-submit" type="button">Next</button>
+</section>
+<!-- Home Page -->
+<section id="home-page">
+  <h1 id="welcome-msg">Welcome!</h1>
+  <p>This AI-powered CV Maker helps you create beautiful, professional resumes in minutes. Get started by creating a new CV.</p>
+  <button id="create-cv" type="button">Create New CV</button>
+</section>
+<!-- CV Page -->
+<section id="cv-page">
+  <h1>Create Your CV</h1>
+  <div class="cv-container" aria-label="CV editing area">
+    <!-- Left Panel -->
+    <div class="cv-left" id="cv-left" style="background-color:#e3f2fd;">
+      <label for="photo-input">Upload your photo</label>
+      <input type="file" id="photo-input" accept="image/*" aria-describedby="photo-desc" />
+      <span id="photo-desc" class="visually-hidden">Select an image file for your photo</span>
+      <img id="photo-preview" src="" alt="Photo preview" />
+      <h3>Personal Details</h3>
+      <ul id="personal-preview" aria-live="polite" aria-atomic="true"></ul>
+      <label>Choose left panel background color</label>
+      <input type="color" id="bg-color-left" value="#e3f2fd" title="Background color for left panel" aria-label="Left panel color picker" />
+      <div id="preset-colors" aria-label="Preset colors for left panel"></div>
+    </div>
+    <!-- Right Panel -->
+    <div class="cv-right" id="cv-right" style="background-color:#ffffff;">
+      <label>Choose right panel background color</label>
+      <input type="color" id="bg-color-right" value="#ffffff" title="Background color for right panel" aria-label="Right panel color picker" />
+      <div id="preset-colors-right" aria-label="Preset colors for right panel"></div>
+      <!-- Personal Info Input -->
+      <div>
+        <h3 class="section-header">Enter Personal Info</h3>
+        <label for="full-name">Full Name</label>
+        <input type="text" id="full-name" placeholder="Enter full name" autocomplete="name" />
+        <label for="contact-number">Contact Number</label>
+        <input type="tel" id="contact-number" placeholder="+91 99999 99999" autocomplete="tel" />
+        <label for="whatsapp-number">WhatsApp Number</label>
+        <input type="tel" id="whatsapp-number" placeholder="+91 99999 99999" autocomplete="tel" />
+        <label for="cv-email">Email Address</label>
+        <input type="email" id="cv-email" placeholder="Enter email" autocomplete="email" />
+        <label for="linkedin">LinkedIn Profile URL</label>
+        <input type="url" id="linkedin" placeholder="https://linkedin.com/in/yourprofile" autocomplete="url" />
+        <label for="portfolio">Portfolio/Website URL</label>
+        <input type="url" id="portfolio" placeholder="https://yourwebsite.com" autocomplete="url" />
+        <label for="summary">Profile Summary / Objective Statement</label>
+        <textarea id="summary" placeholder="Briefly describe yourself and your career goals..."></textarea>
+      </div>
+      <hr />
+      <!-- Education -->
+      <div>
+        <h3 class="section-header">Education</h3>
+        <div id="education-list" class="input-list" aria-live="polite" aria-atomic="true">
+          <input type="text" placeholder="School/College + Graduation Year" />
+        </div>
+        <button id="add-education" type="button" aria-label="Add education entry">Add Education</button>
+        <button id="clear-education" type="button" aria-label="Clear all education entries" style="margin-left: 12px; background-color:#d32f2f;">Clear All</button>
+      </div>
+      <hr />
+      <!-- Work Experience -->
+      <div>
+        <h3 class="section-header">Work Experience</h3>
+        <div id="work-list" class="input-list" aria-live="polite" aria-atomic="true">
+          <input type="text" placeholder="Position - Company (Duration)" />
+        </div>
+        <button id="add-work" type="button" aria-label="Add work experience entry">Add Work Experience</button>
+        <button id="clear-work" type="button" aria-label="Clear all work experience entries" style="margin-left: 12px; background-color:#d32f2f;">Clear All</button>
+      </div>
+      <hr />
+      <!-- Certifications -->
+      <div>
+        <h3 class="section-header">Certifications</h3>
+        <div id="certification-list" class="input-list" aria-live="polite" aria-atomic="true">
+          <input type="text" placeholder="Certification Name - Year" />
+        </div>
+        <button id="add-certification" type="button" aria-label="Add certification entry">Add Certification</button>
+        <button id="clear-certification" type="button" aria-label="Clear all certifications" style="margin-left: 12px; background-color:#d32f2f;">Clear All</button>
+      </div>
+      <hr />
+      <!-- Skills -->
+      <div>
+        <h3 class="section-header">Skills</h3>
+        <div class="skill-types">
+          <input type="text" id="hard-skill" placeholder="Technical Skill" aria-label="Enter a technical skill" />
+          <input type="text" id="soft-skill" placeholder="Soft Skill" aria-label="Enter a soft skill" />
+          <button id="add-skill" type="button" aria-label="Add skills to list">Add Skills</button>
+        </div>
+        <ul id="skill-list" aria-live="polite" aria-atomic="true"></ul>
+        <button id="clear-skills" type="button" aria-label="Clear all skills" style="background-color:#d32f2f;">Clear Skills</button>
+      </div>
+      <hr />
+      <!-- Languages -->
+      <div>
+        <h3 class="section-header">Languages</h3>
+        <div id="language-list" aria-live="polite" aria-atomic="true"></div>
+        <button id="add-language" type="button" aria-label="Add a language">Add Language</button>
+        <button id="clear-languages" type="button" aria-label="Clear all language entries" style="background-color:#d32f2f; margin-left: 12px;">Clear All</button>
+        <div id="language-chart" aria-label="Language proficiency chart"></div>
+      </div>
+      <hr />
+      <!-- Interests -->
+      <div>
+        <h3 class="section-header">Interests</h3>
+        <textarea id="interests" placeholder="Add your interests or hobbies here..."></textarea>
+      </div>
+    </div>
+  </div>
+  <button id="download-cv" type="button" aria-label="Download CV">Download CV</button>
+</section>
+</main>
+
+<script>
+  // Preset professional colors (50+)
+  const professionalColors = [
+    "#e3f2fd","#bbdefb","#90caf9","#64b5f6","#42a5f5","#2196f3","#1e88e5","#1976d2","#1565c0","#0d47a1",
+    "#e8f5e9","#c8e6c9","#a5d6a7","#81c784","#66bb6a","#4caf50","#43a047","#388e3c","#2e7d32","#1b5e20",
+    "#fff3e0","#ffe0b2","#ffcc80","#ffb74d","#ffa726","#ff9800","#fb8c00","#f57c00","#ef6c00","#e65100",
+    "#fce4ec","#f8bbd0","#f48fb1","#f06292","#ec407a","#e91e63","#d81b60","#c2185b","#ad1457","#880e4f",
+    "#ede7f6","#d1c4e9","#b39ddb","#9575cd","#7e57c2","#673ab7","#5e35b1","#512da8","#4527a0","#311b92",
+    "#fafafa","#f5f5f5","#eeeeee","#e0e0e0","#bdbdbd","#9e9e9e","#757575","#616161","#424242","#212121"
+  ];
+
+  // Page refs
+  var signupPage = document.getElementById("signup-page");
+  var passwordPage = document.getElementById("password-page");
+  var homePage = document.getElementById("home-page");
+  var cvPage = document.getElementById("cv-page");
+  var userEmail = "";
+
+  // Signup email validation & flow
+  var emailInput = document.getElementById("email");
+  var emailError = document.getElementById("email-error");
+  document.getElementById("email-submit").addEventListener("click", function () {
+    var email = emailInput.value.trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      emailError.textContent = "Please enter a valid email address.";
+    } else {
+      emailError.textContent = "";
+      userEmail = email;
+      signupPage.classList.remove("active");
+      passwordPage.classList.add("active");
+    }
+  });
+
+  // Password input show/hide toggle
+  var passwordInput = document.getElementById("password");
+  var passwordError = document.getElementById("password-error");
+  var togglePassword = document.getElementById("toggle-password");
+  togglePassword.addEventListener("click", function () {
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      togglePassword.textContent = "Hide";
+    } else {
+      passwordInput.type = "password";
+      togglePassword.textContent = "Show";
+    }
+  });
+  // Also toggle with keyboard accessibility
+  togglePassword.addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === " "){
+      e.preventDefault();
+      togglePassword.click();
+    }
+  });
+
+  document.getElementById("password-submit").addEventListener("click", function () {
+    var password = passwordInput.value;
+    if (password.length < 6) {
+      passwordError.textContent = "Password must be at least 6 characters.";
+    } else {
+      passwordError.textContent = "";
+      passwordPage.classList.remove("active");
+      homePage.classList.add("active");
+      document.getElementById("welcome-msg").textContent = "Welcome, " + userEmail + "!";
+    }
+  });
+
+  // Home → CV page flow
+  document.getElementById("create-cv").addEventListener("click", function () {
+    homePage.classList.remove("active");
+    cvPage.classList.add("active");
+    updatePreview();
+  });
+
+  // Personal info preview update
+  var personalFields = ["full-name", "contact-number", "whatsapp-number", "cv-email", "linkedin", "portfolio", "summary"];
+  var personalPreview = document.getElementById("personal-preview");
+  personalFields.forEach(function (id) {
+    var input = document.getElementById(id);
+    if(input) input.addEventListener("input", updatePreview);
+  });
+  function updatePreview() {
+    personalPreview.innerHTML = "";
+    var fieldsToShow = [
+      {id: "full-name", label:"Name"},
+      {id: "contact-number", label:"Contact Number"},
+      {id: "whatsapp-number", label:"WhatsApp Number"},
+      {id: "cv-email", label:"Email"},
+      {id: "linkedin", label:"LinkedIn"},
+      {id: "portfolio", label:"Portfolio"},
+      {id: "summary", label:"Summary"}
+    ];
+    fieldsToShow.forEach(({id,label}) => {
+      var val = document.getElementById(id)?.value.trim();
+      if(val){
+        var li = document.createElement("li");
+        li.textContent = label + ": " + val;
+        personalPreview.appendChild(li);
+      }
+    });
+  }
+
+  // Background color pickers and presets for left and right panels
+  var cvLeft = document.getElementById("cv-left");
+  var cvRight = document.getElementById("cv-right");
+  var bgColorLeftPicker = document.getElementById("bg-color-left");
+  var bgColorRightPicker = document.getElementById("bg-color-right");
+  var presetColorsLeft = document.getElementById("preset-colors");
+  var presetColorsRight = document.getElementById("preset-colors-right");
+
+  bgColorLeftPicker.addEventListener("input", function(e){
+    cvLeft.style.backgroundColor = e.target.value;
+    selectColorSwatch(presetColorsLeft, e.target.value);
+  });
+  bgColorRightPicker.addEventListener("input", function(e){
+    cvRight.style.backgroundColor = e.target.value;
+    selectColorSwatch(presetColorsRight, e.target.value);
+  });
+  function selectColorSwatch(container, color) {
+    container.querySelectorAll(".color-swatch").forEach(swatch => {
+      swatch.classList.toggle("selected", swatch.style.backgroundColor === color);
+    });
+  }
+  function makeColorSwatches(container, colorList, targetPicker, targetPanel) {
+    colorList.forEach(color => {
+      var swatch = document.createElement("div");
+      swatch.className = "color-swatch";
+      swatch.style.backgroundColor = color;
+      swatch.title = color;
+      swatch.setAttribute("tabindex", "0");
+      swatch.addEventListener("click", () => {
+        targetPicker.value = rgbToHex(swatch.style.backgroundColor);
+        targetPanel.style.backgroundColor = targetPicker.value;
+        selectColorSwatch(container, targetPicker.value);
+      });
+      swatch.addEventListener("keydown", (e) => {
+        if(e.key === "Enter" || e.key === " "){
+          e.preventDefault();
+          swatch.click();
+        }
+      });
+      container.appendChild(swatch);
+    });
+  }
+  function rgbToHex(rgb) {
+    // Converts rgb(255, 255, 255) -> #ffffff
+    var result = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/.exec(rgb);
+    return result ? "#" + 
+      ("0" + parseInt(result[1],10).toString(16)).slice(-2) +
+      ("0" + parseInt(result[2],10).toString(16)).slice(-2) +
+      ("0" + parseInt(result[3],10).toString(16)).slice(-2) : rgb;
+  }
+  // Generate swatches on page load
+  makeColorSwatches(presetColorsLeft, professionalColors, bgColorLeftPicker, cvLeft);
+  makeColorSwatches(presetColorsRight, professionalColors, bgColorRightPicker, cvRight);
+  selectColorSwatch(presetColorsLeft, bgColorLeftPicker.value);
+  selectColorSwatch(presetColorsRight, bgColorRightPicker.value);
+
+  // Add Education / Work / Certifications fields dynamic add + clear all
+  function setupListManagement(addBtnId, listId, inputPlaceholder, clearBtnId) {
+    var addBtn = document.getElementById(addBtnId);
+    var list = document.getElementById(listId);
+    var clearBtn = clearBtnId ? document.getElementById(clearBtnId) : null;
+    addBtn.addEventListener("click", () => {
+      var input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = inputPlaceholder;
+      list.appendChild(input);
+    });
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        list.innerHTML = `<input type="text" placeholder="${inputPlaceholder}">`;
+      });
+    }
+  }
+  setupListManagement("add-education", "education-list", "School/College + Graduation Year", "clear-education");
+  setupListManagement("add-work", "work-list", "Position - Company (Duration)", "clear-work");
+  setupListManagement("add-certification", "certification-list", "Certification Name - Year", "clear-certification");
+
+  // Skills add & clear
+  var addSkillBtn = document.getElementById("add-skill");
+  var skillList = document.getElementById("skill-list");
+  addSkillBtn.addEventListener("click", () => {
+    var hardSkill = document.getElementById("hard-skill").value.trim();
+    var softSkill = document.getElementById("soft-skill").value.trim();
+    if (hardSkill) {
+      var li = document.createElement("li");
+      li.textContent = hardSkill + " (Technical)";
+      skillList.appendChild(li);
+      document.getElementById("hard-skill").value = "";
+    }
+    if (softSkill) {
+      var li2 = document.createElement("li");
+      li2.textContent = softSkill + " (Soft)";
+      skillList.appendChild(li2);
+      document.getElementById("soft-skill").value = "";
+    }
+  });
+  // Clear Skills
+  document.getElementById("clear-skills").addEventListener("click", () => {
+    skillList.innerHTML = "";
+  });
+
+  // Languages add, remove, clear, with chart render and dynamic color bars
+  document.getElementById("add-language").addEventListener("click", function () {
+    var langContainer = document.createElement("div");
+    langContainer.className = "language-input";
+    langContainer.innerHTML =
+      '<input type="text" placeholder="Language" aria-label="Language" />' +
+      '<select class="proficiency" aria-label="Proficiency">' +
+      '<option value="Beginner">Beginner</option>' +
+      '<option value="Intermediate">Intermediate</option>' +
+      '<option value="Advanced">Advanced</option>' +
+      "</select>" +
+      '<button type="button" class="remove-lang" title="Remove language entry">&times;</button>';
+    var removeBtn = langContainer.querySelector(".remove-lang");
+    removeBtn.addEventListener("click", function () {
+      langContainer.remove();
+      renderLanguageChart();
+    });
+    langContainer.querySelector("input").addEventListener("input", renderLanguageChart);
+    langContainer.querySelector("select").addEventListener("change", renderLanguageChart);
+    document.getElementById("language-list").appendChild(langContainer);
+    renderLanguageChart();
+  });
+  // Clear languages
+  document.getElementById("clear-languages").addEventListener("click", () => {
+    document.getElementById("language-list").innerHTML = "";
+    renderLanguageChart();
+  });
+
+  // Language proficiency color mapping for bar-inner
+  const profColors = {
+    "Beginner": "#ff7043",  // light orange
+    "Intermediate": "#ffa726", // amber
+    "Advanced": "#2962ff"  // blue
+  };
+
+  function renderLanguageChart() {
+    var container = document.getElementById("language-chart");
+    container.innerHTML = "";
+    var langData = [];
+    var langDivs = document.querySelectorAll("#language-list .language-input");
+    langDivs.forEach(function (div) {
+      var lang = div.querySelector("input").value.trim();
+      var prof = div.querySelector("select").value;
+      if (lang) {
+        langData.push({ lang: lang, prof: prof });
+      }
+    });
+    var order = { Advanced: 3, Intermediate: 2, Beginner: 1 };
+    langData.sort((a,b) => order[b.prof] - order[a.prof]);
+    var profToWidth = { Beginner: 40, Intermediate: 70, Advanced: 100 };
+    langData.forEach(function (item) {
+      var barDiv = document.createElement("div");
+      barDiv.className = "lang-bar";
+      var labelDiv = document.createElement("div");
+      labelDiv.className = "bar-label";
+      labelDiv.textContent = item.lang + " (" + item.prof + ")";
+      var barOuter = document.createElement("div");
+      barOuter.className = "bar-outer";
+      var barInner = document.createElement("div");
+      barInner.className = "bar-inner";
+      barInner.style.width = profToWidth[item.prof] + "%";
+      barInner.style.backgroundColor = profColors[item.prof] || "#2962ff";
+      barOuter.appendChild(barInner);
+      barDiv.appendChild(labelDiv);
+      barDiv.appendChild(barOuter);
+      container.appendChild(barDiv);
+    });
+  }
+
+  // Photo preview handling
+  var photoInput = document.getElementById("photo-input");
+  var photoPreview = document.getElementById("photo-preview");
+  photoInput.addEventListener("change", function () {
+    var file = photoInput.files[0];
+    if (file && file.type.indexOf("image") === 0) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        photoPreview.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      photoPreview.src = "";
+      alert("Please upload a valid image file.");
+    }
+  });
+
+  // Initialize preview on load
+  updatePreview();
+
+  // Download CV placeholder
+  document.getElementById("download-cv").addEventListener("click", function () {
+    alert("Download functionality is not implemented in this demo. PDF or DOCX export can be integrated here.");
+  });
+</script>
+
+<!-- Accessibility helper -->
+<style>
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+</style>
+</body>
+</html>
