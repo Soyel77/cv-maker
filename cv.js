@@ -2,8 +2,8 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
-const CV = require("../models/CV");
-const auth = require("../middleware/authMiddleware");
+const CV = require("./CV");
+const auth = require(".authMiddleware");
 
 const router = express.Router();
 
