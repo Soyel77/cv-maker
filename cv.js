@@ -3,7 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 const CV = require("./CV");
-const auth = require(".authMiddleware");
+const auth = require("./authMiddleware");
 
 const router = express.Router();
 
