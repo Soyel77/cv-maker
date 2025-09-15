@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
-const CV = require("./CV");
+const CV = require("./cv");
 const auth = require(".authMiddleware");
 
 const router = express.Router();
