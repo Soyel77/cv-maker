@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AI CV Maker</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;max-width:760px;margin:20px auto;padding:0 16px}
+    section{border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px}
+    input,button,textarea{padding:8px;margin:4px 0;width:100%}
+    .row{display:flex;gap:8px}
+    .row > *{flex:1}
+    img{max-width:160px;border-radius:8px}
+    code{background:#f3f4f6;padding:2px 6px;border-radius:4px}
+  </style>
+</head>
+<body>
+  <h1>AI CV Maker</h1>
+
+  <section id="signup">
+    <h3>Sign Up</h3>
+    <input id="regEmail" type="email" placeholder="Email" />
+    <input id="regPass" type="password" placeholder="Password" />
+    <button onclick="register()">Register</button>
+    <div class="row">
+      <input id="otp" placeholder="Enter OTP" />
+      <button onclick="verify()">Verify Email</button>
+    </div>
+    <small>After registration, check email for OTP.</small>
+  </section>
+
+  <section id="login">
+    <h3>Login</h3>
+    <input id="loginEmail" type="email" placeholder="Email" />
+    <input id="loginPass" type="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <div class="row">
+      <button onclick="refresh()">Refresh Token</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+    <p>Access: <code id="at"></code></p>
+    <p>Refresh: <code id="rt"></code></p>
+  </section>
+
+  <section id="cv">
+    <h3>Create Your CV</h3>
+    <div class="row">
+      <input id="fullName" placeholder="Full Name" />
+      <input id="contactNumber" placeholder="Contact Number" />
+    </div>
+    <div class="row">
+      <input id="whatsappNumber" placeholder="WhatsApp Number" />
+      <input id="emailPI" placeholder="Email Address" />
+    </div>
+    <input id="linkedin" placeholder="LinkedIn URL" />
+    <input id="portfolio" placeholder="Portfolio URL" />
+    <textarea id="summary" placeholder="Professional Summary"></textarea>
+    <textarea id="education" placeholder='Education (JSON array)'></textarea>
+    <textarea id="experience" placeholder='Work Experience (JSON array)'></textarea>
+    <textarea id="certs" placeholder='Certifications (JSON array)'></textarea>
+    <textarea id="skills" placeholder='Skills (JSON array)'></textarea>
+    <textarea id="languages" placeholder='Languages (JSON array of {name,proficiency})'></textarea>
+    <input id="interests" placeholder="Interests" />
+    <div>
+      <label>Photo: <input id="photo" type="file" accept="image/*" /></label>
+    </div>
+    <button onclick="saveCV()">Save CV</button>
+    <div id="me"></div>
+  </section>
+
+<script>
+const API = "";
+let accessToken = "";
+let refreshToken = "";
+
+async function register(){
+  const email = document.getElementById("regEmail").value;
+  const password = document.getElementById("regPass").value;
+  const r = await fetch(API + "/api/auth/register", {
+    method:"POST", headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  alert((await r.json()).message || "Registered");
+}
+
+async function verify(){
+  const email = document.getElementById("regEmail").value;
+  const otp = document.getElementById("otp").value;
+  const r = await fetch(API + "/api/auth/verify-otp", {
+    method:"POST", headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ email, otp })
+  });
+  alert((await r.json()).message || "Verified");
+}
+
+async function login(){
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPass").value;
+  const r = await fetch(API + "/api/auth/login", {
+    method:"POST", headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await r.json();
+  accessToken = data.accessToken || "";
+  refreshToken = data.refreshToken || "";
+  document.getElementById("at").textContent = accessToken.slice(0,20) + "...";
+  document.getElementById("rt").textContent = refreshToken.slice(0,20) + "...";
+}
+
+async function refresh(){
+  const r = await fetch(API + "/api/auth/refresh", {
+    method:"POST", headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ refreshToken })
+  });
+  const data = await r.json();
+  accessToken = data.accessToken || accessToken;
+  refreshToken = data.refreshToken || refreshToken;
+  document.getElementById("at").textContent = accessToken.slice(0,20) + "...";
+  document.getElementById("rt").textContent = refreshToken.slice(0,20) + "...";
+}
+
+async function logout(){
+  await fetch(API + "/api/auth/logout", {
+    method:"POST", headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ refreshToken })
+  });
+  accessToken = ""; refreshToken = "";
+  document.getElementById("at").textContent = "";
+  document.getElementById("rt").textContent = "";
+  alert("Logged out");
+}
+
+async function saveCV(){
+  const fd = new FormData();
+  const personalInfo = {
+    fullName: document.getElementById("fullName").value,
+    contactNumber: document.getElementById("contactNumber").value,
+    whatsappNumber: document.getElementById("whatsappNumber").value,
+    email: document.getElementById("emailPI").value,
+    linkedin: document.getElementById("linkedin").value,
+    portfolio: document.getElementById("portfolio").value,
+    summary: document.getElementById("summary").value,
+  };
+  fd.append("personalInfo", JSON.stringify(personalInfo));
+  fd.append("education", document.getElementById("education").value || "[]");
+  fd.append("workExperience", document.getElementById("experience").value || "[]");
+  fd.append("certifications", document.getElementById("certs").value || "[]");
+  fd.append("skills", document.getElementById("skills").value || "[]");
+  fd.append("languages", document.getElementById("languages").value || "[]");
+  fd.append("interests", document.getElementById("interests").value || "");
+  const photoFile = document.getElementById("photo").files;
+  if (photoFile) fd.append("photo", photoFile);
+
+  const r = await fetch(API + "/api/cv", {
+    method:"POST",
+    headers: { "Authorization": "Bearer " + accessToken },
+    body: fd
+  });
+  const data = await r.json();
+  renderMe(data);
+}
+
+function renderMe(cv){
+  if (!cv){ document.getElementById("me").innerHTML = "<p>No CV yet.</p>"; return; }
+  const img = cv.photoFilename ? `<img src="/uploads/${cv.photoFilename}" alt="photo">` : "";
+  document.getElementById("me").innerHTML = `
+    ${img}
+    <pre>${JSON.stringify(cv, null, 2)}</pre>
+  `;
+}
+</script>
+</body>
+</html>
